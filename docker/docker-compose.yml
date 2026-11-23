@@ -61,6 +61,9 @@ services:
       SAAS_HTTP_PORT: ${SAAS_HTTP_PORT}
       MASTER_HTTP_PORT: ${MASTER_HTTP_PORT}
       MASTER_GEVENT_PORT: ${MASTER_GEVENT_PORT}
+    # Rendered from the templates on every start; also hides the image's stock site
+    tmpfs:
+      - /etc/nginx/conf.d
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/templates:/etc/nginx/templates:ro
