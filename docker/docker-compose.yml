@@ -1,0 +1,73 @@
+# Odoo SaaS Kit master stack. Run ./setup.sh instead of calling compose
+# directly the first time: it prepares ${SAAS_ROOT}, the secrets and the images.
+name: odoo-saas
+
+services:
+  db:
+    image: postgres:15
+    container_name: saas-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - saas-db-data:/var/lib/postgresql/data
+    # Published on the Docker bridge only: the master (host network) and the
+    # client containers (default bridge) both reach it at ${DB_HOST}:${DB_PORT}.
+    ports:
+      - "${DB_HOST}:${DB_PORT}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  master:
+    image: odoo-saas-master:17.0
+    build:
+      context: ./master
+    container_name: saas-master
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    # Host network: the kit talks to the template/client containers through
+    # http://localhost:<published port>.
+    network_mode: host
+    group_add:
+      - "${DOCKER_GID}"
+    environment:
+      SAAS_NGINX_CONTAINER: saas-nginx
+    command: ["odoo", "-c", "/etc/odoo/odoo.conf"]
+    entrypoint: []
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Same path inside and outside: the kit passes these paths to the Docker
+      # daemon as bind mounts for the client containers.
+      - ${SAAS_ROOT}:${SAAS_ROOT}
+      - ${SAAS_ROOT}/master/odoo.conf:/etc/odoo/odoo.conf:ro
+      - ${SAAS_ROOT}/master/data:/var/lib/odoo
+      - ../SAAS-addons:/mnt/extra-addons:ro
+      - ${SAAS_ROOT}/saas.conf:/mnt/extra-addons/odoo_saas_kit/models/lib/saas.conf:ro
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: saas-nginx
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      SAAS_DOMAIN: ${SAAS_DOMAIN}
+      SAAS_HTTP_PORT: ${SAAS_HTTP_PORT}
+      MASTER_HTTP_PORT: ${MASTER_HTTP_PORT}
+      MASTER_GEVENT_PORT: ${MASTER_GEVENT_PORT}
+    # Rendered from the templates on every start; also hides the image's stock site
+    tmpfs:
+      - /etc/nginx/conf.d
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - ${SAAS_ROOT}/Odoo-SAAS-Data/docker_vhosts:/etc/nginx/saas_vhosts:ro
+
+volumes:
+  saas-db-data:
