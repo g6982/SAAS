@@ -100,6 +100,8 @@ limit_time_real = 3600
 CONF
 
 $SUDO chown -R "${ODOO_UID}:${ODOO_GID}" "$SAAS_ROOT"
+# the kit writes the database password into every client config below this directory
+$SUDO chmod 750 "$SAAS_ROOT"
 $SUDO chmod 640 "${SAAS_ROOT}/saas.conf" "${SAAS_ROOT}/master/odoo.conf"
 
 # --- 4. images ----------------------------------------------------------------
