@@ -125,7 +125,11 @@ if [ "$(kit_state)" != "installed" ]; then
         echo "odoo_saas_kit failed to install, see the log above." >&2
         exit 1
     fi
-    # never expose the stock admin / admin login
+fi
+
+# never expose the stock admin / admin login; the marker makes an interrupted run retry
+ADMIN_MARK="${SAAS_ROOT}/master/.admin-password-set"
+if ! $SUDO test -e "$ADMIN_MARK"; then
     set_env ADMIN_INITIAL_PASSWORD "$(rand)"
     set -a; . ./.env; set +a
     docker compose run --rm --no-deps -T -e ADMIN_INITIAL_PASSWORD master \
@@ -134,6 +138,7 @@ import os
 env.ref("base.user_admin").password = os.environ["ADMIN_INITIAL_PASSWORD"]
 env.cr.commit()
 PY
+    $SUDO touch "$ADMIN_MARK"
 fi
 
 docker compose up -d
