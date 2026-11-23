@@ -103,7 +103,7 @@ class SaasPlans(models.Model):
         for obj in self:
             obj.saas_base_url = obj.server_id.server_domain
 
-    name = fields.Char(string='Plan Name', required=True, tracking = True,,help="Name of the Saas Plan")
+    name = fields.Char(string='Plan Name', required=True, tracking = True, help="Name of the Saas Plan")
     saas_base_url = fields.Char(string="SaaS Domain(Base URL)", required=True, tracking = True,help="Base url of the server on which the Plan container is runing")
     image = fields.Binary(string='Image')
     summary = fields.Char(string="Plan Summary", tracking = True,help="short description of the saas plan")

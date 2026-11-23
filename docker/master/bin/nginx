@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+"""Forward `nginx <args>` to the nginx container through the Docker socket."""
+import os
+import sys
+
+import docker
+
+name = os.environ.get("SAAS_NGINX_CONTAINER", "saas-nginx")
+try:
+    container = docker.from_env().containers.get(name)
+    code, output = container.exec_run(["nginx", *sys.argv[1:]])
+except Exception as exc:  # container missing, socket not reachable, ...
+    sys.stderr.write("nginx shim: %s\n" % exc)
+    sys.exit(1)
+sys.stdout.write(output.decode(errors="replace"))
+sys.exit(code)

@@ -1,0 +1,28 @@
+server {
+    listen ${SAAS_HTTP_PORT} default_server;
+    server_name ${SAAS_DOMAIN};
+
+    proxy_read_timeout 720s;
+    proxy_connect_timeout 720s;
+    proxy_send_timeout 720s;
+
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Real-IP $remote_addr;
+
+    location /websocket {
+        proxy_pass http://127.0.0.1:${MASTER_GEVENT_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location / {
+        proxy_redirect off;
+        proxy_pass http://127.0.0.1:${MASTER_HTTP_PORT};
+    }
+
+    gzip on;
+    gzip_types text/css text/less text/plain text/xml application/xml application/json application/javascript;
+}
