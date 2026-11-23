@@ -15,7 +15,7 @@ server {
    ###############------Log----------------------################################################
    access_log /var/log/nginx/DOMAIN_TO_BE_REPLACED.access.log;
    error_log /var/log/nginx/DOMAIN_TO_BE_REPLACED.error.log;
-   client_body_in_file_only on;
+   client_body_in_file_only clean;
    # Redirect longpoll requests to odoo longpolling port
    location /longpolling {
    proxy_pass http://LONG_BACKEND_TO_BE_REPLACED; #LONGPOLLINGBACKEND
