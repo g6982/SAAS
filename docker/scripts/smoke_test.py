@@ -5,7 +5,7 @@ Creates (or reuses) a SaaS server, a plan with its template database, a
 contract and a client instance, then checks the client answers through nginx.
 Reads docker/.env; run it on the Docker host after ./setup.sh.
 
-    python3 scripts/smoke_test.py [--login admin --password admin --subdomain demo1]
+    python3 scripts/smoke_test.py [--login admin --password ... --subdomain demo1]
 """
 import argparse
 import json
@@ -53,11 +53,12 @@ class Odoo:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--login", default="admin")
-    parser.add_argument("--password", default="admin")
+    parser.add_argument("--password", help="default: ADMIN_INITIAL_PASSWORD from .env")
     parser.add_argument("--subdomain", default="demo1")
     args = parser.parse_args()
 
     env = load_env(os.path.join(HERE, "..", ".env"))
+    args.password = args.password or env.get("ADMIN_INITIAL_PASSWORD") or "admin"
     domain = env["SAAS_DOMAIN"]
     odoo = Odoo("http://127.0.0.1:%s" % env["MASTER_HTTP_PORT"], env["MASTER_DB"],
                 args.login, args.password)

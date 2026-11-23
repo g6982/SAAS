@@ -123,6 +123,15 @@ if [ "$(kit_state)" != "installed" ]; then
         echo "odoo_saas_kit failed to install, see the log above." >&2
         exit 1
     fi
+    # never expose the stock admin / admin login
+    set_env ADMIN_INITIAL_PASSWORD "$(rand)"
+    set -a; . ./.env; set +a
+    docker compose run --rm --no-deps -T -e ADMIN_INITIAL_PASSWORD master \
+        odoo shell -c /etc/odoo/odoo.conf -d "$MASTER_DB" --no-http --workers=0 <<'PY'
+import os
+env.ref("base.user_admin").password = os.environ["ADMIN_INITIAL_PASSWORD"]
+env.cr.commit()
+PY
 fi
 
 docker compose up -d
@@ -131,7 +140,8 @@ PORT_SUFFIX=""
 [ "$SAAS_HTTP_PORT" = "80" ] || PORT_SUFFIX=":${SAAS_HTTP_PORT}"
 cat <<MSG
 
-SaaS master is starting: http://${SAAS_DOMAIN}${PORT_SUFFIX}  (login admin / admin, change it now)
+SaaS master is starting: http://${SAAS_DOMAIN}${PORT_SUFFIX}
+  Login admin, initial password: ADMIN_INITIAL_PASSWORD in docker/.env
 
 SaaS server record values (SaaS Kit > Configuration > SaaS Servers):
   Host Server / Database Host Server : Self

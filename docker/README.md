@@ -31,7 +31,7 @@ cp .env.example .env      # optional: edit SAAS_DOMAIN, ports, SAAS_ROOT
 3. writes `SAAS_ROOT/saas.conf` (bind-mounted over `odoo_saas_kit/models/lib/saas.conf`) and `SAAS_ROOT/master/odoo.conf`,
 4. builds both images, initialises the `MASTER_DB` database with `odoo_saas_kit`, and starts the stack.
 
-Open `http://SAAS_DOMAIN` and log in with `admin` / `admin`, then change the password.
+Open `http://SAAS_DOMAIN` and log in as `admin` with the `ADMIN_INITIAL_PASSWORD` from `.env`.
 
 ## Create a client
 
